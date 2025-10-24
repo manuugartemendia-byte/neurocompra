@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; background: #f5fdf7; color: #333; }
+    header { background: linear-gradient(to bottom, rgba(35,172,42,0) 60%, rgba(35,172,42,1) 100%), url("https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1600&q=80"); background-size: cover; background-position: center; color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    header h1 { margin: 0; font-size: 2.5rem; }
+    header p { margin-top: 8px; font-size: 1.2rem; opacity: 0.9; }
+    main { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+    .card { background: white; padding: 25px; margin: 20px 0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+    h2 { margin-top: 0; font-size: 1.3rem; color: #4CAF50; }
+    button { background: #4CAF50; color: white; border: none; padding: 12px 18px; border-radius: 10px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: background 0.3s ease, transform 0.1s ease; }
+    button:hover { background: linear-gradient(135deg, #45a049, #3e9144); transform: scale(1.03); }
+    textarea, input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 10px; font-size: 1rem; font-family: 'Poppins', sans-serif; resize: vertical; }
+    .result { margin-top: 12px; padding: 12px; background: #e8f5e9; border-radius: 10px; font-size: 0.95rem; color: #2e7d32; border-left: 4px solid #4CAF50; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 Neuro Compra</h1>
+    <p>Tu asistente inteligente para elegir productos online. Decide mejor.</p>
+  </header>
+
+  <section id="quizasTeInterese" style="padding:20px;">
+    <h2>🛒 Quizás te interese</h2>
+    <div id="recomendaciones" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;"></div>
+  </section>
+
+  <!-- 💬 CHAT LIBRE -->
+  <section id="freeChatSection" style="display:none; max-width:900px; margin:30px auto; padding:0 20px;">
+    <div class="card">
+      <h2>💬 Chat Libre con la IA</h2>
+      <div id="chatLibreHistorial" style="background:#f9f9f9; border-radius:10px; padding:15px; height:300px; overflow-y:auto; margin-bottom:15px;"></div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <textarea id="freeChatInput" placeholder="Habla o escribe tu duda..." style="flex:1;"></textarea>
+        <button class="voice-btn" onclick="startVoiceInput('freeChatInput', this)">🎤</button>
+      </div>
+      <button onclick="enviarChatLibre()">Enviar</button>
+    </div>
+  </section>
+
+  <!-- 🔎 BÚSQUEDA TOTAL -->
+  <div id="seccionBusquedaTotal" class="seccion" style="display:none;">
+    <div class="card">
+<!-- Reemplaza la parte interna de tu sección 'seccionBusquedaTotal' (dentro .card) por esto -->
+<h2>🔎 Búsqueda Total</h2>
+<p>Buscá en toda la web productos, tiendas y ofertas, con ayuda de la IA.</p>
+
+<div style="display:flex;gap:8px;align-items:center;">
+  <input type="text" id="totalSearchInput" placeholder="Ej: notebook gamer RTX 4060" style="flex:1;padding:8px;border-radius:8px;border:1px solid #ccc;">
+  <button onclick="buscarTotal()" style="margin-left:6px;">Buscar</button>
+  <button id="micTotalBtn" title="Buscar por voz" onclick="startVoiceFor('totalSearchInput', 'micTotalBtn')" style="margin-left:6px;">🎤</button>
+</div>
+
+<div style="margin-top:10px; display:flex; gap:8px;">
+  <button onclick="analizarProducto()">🔬 Analizar con IA</button>
+  <button onclick="mostrarOfertas()">🛍️ Ofertas y Tiendas</button>
+</div>
+
+<div id="totalSearchResults" style="margin-top:20px;"></div>
+    </div>
+  </div>
+
+<nav style="text-align:center; margin:20px 0;">
+  <button onclick="mostrarSeccion('mainForms')">⚙️ Funciones</button>
+  <button onclick="mostrarSeccion('freeChatSection')">💬 Chat Libre</button>
+  <button onclick="mostrarSeccion('busquedaTotal')">Búsqueda Total</button>
+</nav>
+
+<section id="mainForms">
+  <main>
+    <!-- 1 -->
+    <div class="card">
+      <h2>Asesor IA de compras</h2>
+      <textarea id="advisorInput" placeholder="Ej: Notebook Lenovo vs HP..."></textarea>
+      <button onclick="consultAI('advisor')">Consultar IA</button>
+      <div id="advisorResult" class="result"></div>
+    </div>
+
+    <!-- 2 -->
+    <div class="card">
+      <h2>Comparador: Nuevo vs Segunda Mano</h2>
+      <input type="text" id="usedInput" placeholder="Ej: iPhone 12">
+      <button onclick="consultAI('used')">Comparar</button>
+      <div id="usedResult" class="result"></div>
+    </div>
+
+    <!-- 3 -->
+    <div class="card">
+      <h2>Probador Virtual Comunitario</h2>
+      <textarea id="virtualInput" placeholder="Ej: Campera roja para oficina informal"></textarea>
+      <button onclick="consultAI('virtual')">Probar con IA</button>
+      <div id="virtualResult" class="result"></div>
+    </div>
+
+    <!-- 4 -->
+    <div class="card">
+      <h2>IA Recomendadora de Combos</h2>
+      <input type="text" id="comboInput" placeholder="Ej: Notebook para programar">
+      <button onclick="consultAI('combo')">Recomendar combos</button>
+      <div id="comboResult" class="result"></div>
+    </div>
+
+    <!-- 5 -->
+    <div class="card">
+      <h2>Detector de Falsas Ofertas</h2>
+      <input type="text" id="offerInput" placeholder="Ej: Zapatillas Nike 50% OFF">
+      <button onclick="consultAI('offer')">Detectar</button>
+      <div id="offerResult" class="result"></div>
+    </div>
+
+    <!-- 6 -->
+    <div class="card">
+      <h2>Asesor de Compras Rápidas</h2>
+      <textarea id="quickInput" placeholder="Ej: Necesito auriculares baratos y buenos"></textarea>
+      <button onclick="consultAI('quick')">Asesorar</button>
+      <div id="quickResult" class="result"></div>
+    </div>
+
+    <!-- 7 -->
+    <div class="card">
+      <h2>Simulador de Valor Futuro</h2>
+      <input type="text" id="futureInput" placeholder="Ej: Notebook gamer RTX 4060">
+      <button onclick="consultAI('future')">Simular</button>
+      <div id="futureResult" class="result"></div>
+    </div>
+
+    <!-- 8 -->
+    <div class="card">
+      <h2>Match de Personalidad con el Producto</h2>
+      <textarea id="personalityInput" placeholder="Ej: Soy estudiante, gamer y busco un celular..."></textarea>
+      <button onclick="consultAI('personality')">Ver compatibilidad</button>
+      <div id="personalityResult" class="result"></div>
+    </div>
+
+    <!-- 9 -->
+    <div class="card">
+      <h2>Escáner de Reseñas Falsas</h2>
+      <textarea id="reviewsInput" placeholder="Pega reseñas o comentarios de un producto..."></textarea>
+      <button onclick="consultAI('reviews')">Analizar</button>
+      <div id="reviewsResult" class="result"></div>
+    </div>
+
+    <!-- 10 -->
+    <div class="card">
+      <h2>Asistente de Devoluciones Inteligentes</h2>
+      <textarea id="returnsInput" placeholder="Explica tu situación con un producto defectuoso..."></textarea>
+      <button onclick="consultAI('returns')">Generar plan</button>
+      <div id="returnsResult" class="result"></div>
+    </div>
+
+    <!-- 11 -->
+    <div class="card">
+      <h2>Predicción de Tendencias</h2>
+      <input type="text" id="trendsInput" placeholder="Ej: Smartwatch, auriculares, consolas">
+      <button onclick="consultAI('trends')">Predecir</button>
+      <div id="trendsResult" class="result"></div>
+    </div>
+
+    <!-- 12 -->
+    <div class="card">
+      <h2>Asistente de Negociación de Precios</h2>
+      <textarea id="negotiateInput" placeholder="Producto y contexto de compra (ej: quiero laptop usada en Marketplace)..."></textarea>
+      <button onclick="consultAI('negotiate')">Negociar</button>
+      <div id="negotiateResult" class="result"></div>
+    </div>
+
+    <!-- 13 -->
+    <div class="card">
+      <h2>Mapa de Confianza de Tiendas</h2>
+      <input type="text" id="storeInput" placeholder="Ej: TiendaX, Amazon, Mercado Libre...">
+      <button onclick="consultAI('store')">Ver confianza</button>
+      <div id="storeResult" class="result"></div>
+    </div>
+
+    <div id="installBanner" 
+     style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+            background:white; border:2px solid #00b894; border-radius:12px; padding:15px 20px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.2); text-align:center; z-index:9999;">
+  <h3 style="margin:0; color:#00b894; font-weight:bold;">📲 Instalar Neuro Compra</h3>
+  <p style="margin:8px 0 12px 0; font-size:14px; color:#333;">
+    Instala la app para acceder más rápido y sin navegador.
+  </p>
+  <button id="installBtn" 
+          style="background:#00b894; color:white; border:none; padding:8px 16px; border-radius:8px;
+                 cursor:pointer; font-weight:bold;">
+    Instalar aplicación
+  </button>
+  <button id="closeBanner" 
+          style="background:transparent; color:#555; border:none; margin-left:10px; cursor:pointer;">
+    Cerrar
+  </button>
+</div>
+
+  </main>
+  </section>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzWSUbrJtAXEMsNZrijiEpesO0pQpEdwOkEVKf1yQAXgA5wyq6y5lruPmGW50IEyfCRWw/exec"
+
+// Esta función hace la llamada a tu API de Apps Script
+async function callAPI(action, data = {}) {
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, ...data })
+    });
+
+    if (!response.ok) throw new Error("Error de conexión con la API");
+    return await response.json();
+
+  } catch (err) {
+    console.error("Error en callAPI:", err);
+    return { error: err.message };
+  }
+}
+
+// --- BANNER DE INSTALACIÓN ---
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    document.getElementById("installBanner").style.display = "block";
+  }, 5000);
+
+  document.getElementById("closeBanner").addEventListener("click", () => {
+    document.getElementById("installBanner").style.display = "none";
+  });
+
+  document.getElementById("installBtn").addEventListener("click", () => {
+    const ua = navigator.userAgent.toLowerCase();
+    let mensaje = "";
+
+    if (/android/.test(ua)) {
+      mensaje = "👉 En Android: toca los tres puntos ⋮ y elige 'Agregar a pantalla de inicio'.";
+    } else if (/iphone|ipad|ipod/.test(ua)) {
+      mensaje = "👉 En iPhone/iPad: toca el botón de compartir ⬆️ y elige 'Agregar a pantalla de inicio'.";
+    } else {
+      mensaje = "👉 En computadora: puedes crear un acceso directo desde tu navegador.";
+    }
+
+    alert(mensaje);
+  });
+});
+
+// --- RECONOCIMIENTO DE VOZ GLOBAL ---
+function startVoiceInput(inputId, btn) {
+  if (!('webkitSpeechRecognition' in window)) {
+    alert("Tu navegador no soporta reconocimiento de voz.");
+    return;
+  }
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'es-ES';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  const input = document.getElementById(inputId);
+
+  btn.classList.add("listening");
+  input.placeholder = "🎙️ Escuchando...";
+  recognition.start();
+
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+  };
+  recognition.onerror = () => alert("Error al reconocer la voz.");
+  recognition.onend = () => {
+    btn.classList.remove("listening");
+    input.placeholder = "Habla o escribe tu consulta...";
+  };
+}
+
+// --- CONSULTAS A LA IA ---
+async function consultAI(type) {
+  const button = event.target;
+  const resultDiv = document.getElementById(type + "Result");
+  const mensajes = ["🔄 Generando respuesta...", "🤖 Analizando datos...", "💡 Armando respuesta completa..."];
+  let i = 0;
+
+  // Ocultar botón y mostrar mensajes animados
+  button.style.display = "none";
+  resultDiv.innerText = mensajes[0];
+  const interval = setInterval(() => {
+    i = (i + 1) % mensajes.length;
+    resultDiv.innerText = mensajes[i];
+  }, 1500);
+
+  // Crear prompt según el tipo
+  let prompt = "";
+  if (type === "advisor") {
+    prompt = "Actúa como asesor de compras. Estoy evaluando: " + document.getElementById("advisorInput").value + ". Dame pros y contras claros y breves, y una conclusión perfecta.";
+  } else if (type === "used") {
+    prompt = "Compara NUEVO vs SEGUNDA MANO para este producto: " + document.getElementById("usedInput").value + ". Explica ventajas y riesgos.";
+  } else if (type === "virtual") {
+    prompt = "Actúa como probador virtual comunitario. Producto: " + document.getElementById("virtualInput").value + ". Opina si encaja conmigo, sé directo.";
+  } else if (type === "combo") {
+    prompt = "Sugiere combos útiles que acompañen este producto: " + document.getElementById("comboInput").value;
+  } else if (type === "offer") {
+    prompt = "Analiza si esta oferta parece genuina o engañosa: " + document.getElementById("offerInput").value;
+  } else if (type === "quick") {
+    prompt = "Dame un asesoramiento de compra rápido en menos de 1 minuto para: " + document.getElementById("quickInput").value + ". Responde en 3 viñetas cortas.";
+  } else if (type === "future") {
+    prompt = "Predice el valor futuro de este producto: " + document.getElementById("futureInput").value + ". Indica si se devalúa rápido o se mantiene.";
+  } else if (type === "personality") {
+    prompt = "Evalúa si este producto encaja con mi personalidad y estilo de vida: " + document.getElementById("personalityInput").value + ". Sé honesto y breve.";
+  } else if (type === "reviews") {
+    prompt = "Analiza si estas reseñas parecen genuinas o falsas (responde solo 'sí' o 'no'): " + document.getElementById("reviewsInput").value;
+  } else if (type === "returns") {
+    prompt = "Genera un plan para hacer una devolución efectiva con este caso: " + document.getElementById("returnsInput").value;
+  } else if (type === "trends") {
+    prompt = "Predice tendencias de compra y demanda para: " + document.getElementById("trendsInput").value;
+  } else if (type === "negotiate") {
+    prompt = "Simula ser un experto en negociación. Dame frases útiles para negociar: " + document.getElementById("negotiateInput").value;
+  } else if (type === "store") {
+    prompt = "Evalúa la confiabilidad de estas tiendas online: " + document.getElementById("storeInput").value;
+  }
+
+  try {
+    const { result: respuesta } = await callAPI("getAIResponse", { prompt });
+    clearInterval(interval);
+
+    const formatted = respuesta
+      .replace(/\n\s*\n/g, "</p><p>")
+      .replace(/\n/g, "<br>")
+      .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+      .replace(/^- (.*)/gm, "• $1");
+
+    resultDiv.innerHTML = `<b>🤖 IA:</b><p>${formatted}</p>`;
+  } catch (error) {
+    console.error("Error consultAI:", error);
+    resultDiv.innerHTML = "⚠️ Error al obtener la respuesta.";
+  } finally {
+    clearInterval(interval);
+    button.style.display = "inline-block";
+  }
+}
+
+// --- RECOMENDACIONES ---
+async function generarRecomendaciones(interes) {
+  const prompt = `
+Eres un asistente experto en compras online.
+El usuario está interesado en: "${interes}".
+Devuelve EXACTAMENTE un JSON con 4 productos relacionados.
+`;
+  const respuestaJSON = await callAPI("callAI", { prompt });
+  mostrarRecomendaciones(respuestaJSON);
+}
+
+function mostrarRecomendaciones(respuestaJSON) {
+  try {
+    const jsonString = respuestaJSON.match(/\[.*\]/s)[0];
+    const productos = JSON.parse(jsonString);
+    let html = "";
+    productos.forEach(p => {
+      html += `
+        <div style="background:white;border-radius:12px;padding:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);text-align:center;">
+          <h3 style="font-size:1rem;color:#333;">${p.nombre}</h3>
+          <p>${p.descripcion}</p>
+          <a href="${p.link}" target="_blank" style="display:inline-block;margin-top:5px;padding:8px 12px;background:#4CAF50;color:white;border-radius:8px;text-decoration:none;">Ver producto</a>
+        </div>`;
+    });
+    document.getElementById("recomendaciones").innerHTML = html;
+  } catch {
+    document.getElementById("recomendaciones").innerHTML = "<p>⚠️ No se pudieron generar recomendaciones.</p>";
+  }
+}
+
+// --- MOSTRAR SECCIONES ---
+function mostrarSeccion(nombre) {
+  document.getElementById("mainForms").style.display = "none";
+  document.getElementById("freeChatSection").style.display = "none";
+  document.getElementById("seccionBusquedaTotal").style.display = "none";
+  document.getElementById(nombre === "busquedaTotal" ? "seccionBusquedaTotal" : nombre).style.display = "block";
+}
+
+// --- CHAT LIBRE ---
+let historialConversacion = [];
+
+async function enviarChatLibre() {
+  const mensaje = document.getElementById("freeChatInput").value;
+  if (!mensaje.trim()) return;
+
+  const historial = document.getElementById("chatLibreHistorial");
+
+  // Mostrar mensaje del usuario
+  historial.innerHTML += `
+    <div style="margin-bottom:10px;">
+      <b>🧑 Tú:</b> ${mensaje}
+    </div>`;
+  document.getElementById("freeChatInput").value = "";
+
+  historialConversacion.push("Usuario: " + mensaje);
+
+  const prompt =
+    "Responde como asesor experto en compras online. Sé rápido, detallado y concreto.\n\n" +
+    historialConversacion.join("\n");
+
+  const mensajesCargando = ["💬 Pensando...", "🔍 Analizando tus compras...", "🤖 Generando respuesta detallada..."];
+  let i = 0;
+  const cargandoDiv = document.createElement("div");
+  cargandoDiv.id = "loadingIA";
+  cargandoDiv.style.marginBottom = "10px";
+  cargandoDiv.innerHTML = `<b>🤖 IA:</b> ${mensajesCargando[i]}`;
+  historial.appendChild(cargandoDiv);
+
+  const intervalo = setInterval(() => {
+    i = (i + 1) % mensajesCargando.length;
+    cargandoDiv.innerHTML = `<b>🤖 IA:</b> ${mensajesCargando[i]}`;
+  }, 1500);
+
+  try {
+    const { result: respuesta } = await callAPI("getAIResponse", { prompt });
+    clearInterval(intervalo);
+    cargandoDiv.remove();
+
+    const formatted = respuesta
+      .replace(/\n\s*\n/g, "</p><p>")
+      .replace(/\n/g, "<br>")
+      .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+      .replace(/^- (.*)/gm, "• $1");
+
+    historial.innerHTML += `
+      <div style="margin-bottom:15px; background:#f9f9f9; border-radius:10px; padding:10px;">
+        <b>🤖 IA:</b><p>${formatted}</p>
+      </div>`;
+
+    historial.scrollTop = historial.scrollHeight;
+    historialConversacion.push("IA: " + respuesta);
+  } catch (error) {
+    console.error("Error enviarChatLibre:", error);
+    cargandoDiv.innerHTML = "⚠️ Error al obtener respuesta de la IA.";
+  }
+}
+
+// --- BUSQUEDA TOTAL ---
+async function buscarTotal() {
+  const query = document.getElementById("totalSearchInput").value.trim();
+  const resultsDiv = document.getElementById("totalSearchResults");
+  if (!query) return (resultsDiv.innerHTML = "<p>⚠️ Escribí qué producto buscar.</p>");
+
+  resultsDiv.innerHTML = "<p>🔍 Buscando productos...</p>";
+  const res = await callAPI("buscarTotalEnWeb", { query });
+  let resultados = [];
+  try { resultados = typeof res === "string" ? JSON.parse(res) : res; } catch {}
+  let html = "";
+  resultados.forEach(r => {
+    html += `
+      <div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;margin-bottom:10px;padding:10px;">
+        <img src="${r.imagen}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;">
+        <div style="flex:1;">
+          <h3>${r.titulo}</h3>
+          <p>${r.descripcion}</p>
+          <a href="${r.enlace}" target="_blank" style="color:#4CAF50;">Ver producto</a>
+        </div>
+      </div>`;
+  });
+  resultsDiv.innerHTML = html || "<p>Sin resultados encontrados.</p>";
+}
+
+// --- ANALIZAR PRODUCTO ---
+async function analizarProducto() {
+  const producto = document.getElementById('totalSearchInput').value.trim();
+  if (!producto) return alert("Escribe el nombre del producto primero.");
+  const resultsDiv = document.getElementById('totalSearchResults');
+  resultsDiv.innerHTML = "<p>🧠 Analizando producto...</p>";
+  const html = await callAPI("analizarProductoIA", { producto });
+  resultsDiv.innerHTML = html;
+}
+
+// --- MOSTRAR OFERTAS ---
+async function mostrarOfertas() {
+  const producto = document.getElementById('totalSearchInput').value.trim();
+  if (!producto) return alert("Escribe el nombre del producto primero.");
+  const resultsDiv = document.getElementById('totalSearchResults');
+  resultsDiv.innerHTML = "<p>🔎 Buscando ofertas...</p>";
+  const res = await callAPI("buscarTotalEnWeb", { query: producto });
+  let resultados = [];
+  try { resultados = typeof res === "string" ? JSON.parse(res) : res; } catch {}
+  let html = `<h3>🛍️ Ofertas para "${producto}"</h3>`;
+  resultados.forEach(r => {
+    html += `
+      <div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;margin-bottom:10px;padding:10px;">
+        <img src="${r.imagen}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;">
+        <div style="flex:1;">
+          <h3>${r.titulo}</h3>
+          <p>${r.descripcion}</p>
+          <a href="${r.enlace}" target="_blank" style="color:#4CAF50;">Ver producto</a>
+        </div>
+      </div>`;
+  });
+  resultsDiv.innerHTML = html || "<p>No se encontraron ofertas.</p>";
+}
+</script>
+</body>
+</html>
